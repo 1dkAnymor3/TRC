@@ -1,39 +1,71 @@
-#include "MyBot.h"
 #include <dpp/dpp.h>
+#include <string>
 
-/* Be sure to place your token in the line below.
- * Follow steps here to get a token:
- * https://dpp.dev/creating-a-bot-application.html
- * When you invite the bot, be sure to invite it with the 
- * scopes 'bot' and 'applications.commands', e.g.
- * https://discord.com/oauth2/authorize?client_id=940762342495518720&scope=bot+applications.commands&permissions=139586816064
- */
-const std::string    BOT_TOKEN    = "add your token here";
+using namespace std;
 
-int main()
-{
-    /* Create bot cluster */
-    dpp::cluster bot(BOT_TOKEN);
+int main() {
+    /* Setup the bot */
+    dpp::cluster bot("bro i aint putting my id publicly", dpp::i_default_intents | dpp::i_message_content);
 
-    /* Output simple log messages to stdout */
     bot.on_log(dpp::utility::cout_logger());
 
-    /* Handle slash command */
-    bot.on_slashcommand([](const dpp::slashcommand_t& event) {
-         if (event.command.get_command_name() == "ping") {
-            event.reply("Pong!");
+    /* Message handler to look for a command called !button */
+    bot.on_message_create([&bot](const dpp::message_create_t& event) {
+        if (event.msg.content == "!button") {
+            /* Create a message containing an action row, and a button within the action row. */
+            bot.message_create(
+                dpp::message(event.msg.channel_id, "this text has buttons").add_component(
+                    dpp::component().add_component(
+                        dpp::component().set_label("Click me!").
+                        set_type(dpp::cot_button).
+                        set_emoji(u8"😄").
+                        set_style(dpp::cos_danger).
+                        set_id("myid")
+                    )
+                )
+            );
         }
-    });
-
-    /* Register slash command here in on_ready */
-    bot.on_ready([&bot](const dpp::ready_t& event) {
-        /* Wrap command registration in run_once to make sure it doesnt run on every full reconnection */
-        if (dpp::run_once<struct register_bot_commands>()) {
-            bot.global_command_create(dpp::slashcommand("ping", "Ping pong!", bot.me.id));
+        else if (event.msg.content == "!listemojiid") {
+            string string_request = "";
+            char piece_name[6] = { "r", "n", "b", "q", "k", "p" };
+            int piece_type = 0;
+            int piece_square = 0;
+            for (char piece: piece_name) {
+                for (piece_type = 0; piece_type < 2; piece_type++) {
+                    for (piece_square = 0; piece_square < 2; piece_square++) {
+                        if (piece_type == 0) {
+                            if (piece_square == 0) {
+                                string_request = string_request + to_string(piece) + "ll";
+                            }
+                            else {
+                                string_request = string_request + to_string(piece) + "ld";
+                            }
+                        }
+                        else {
+                            if (piece_square == 0) {
+                                string_request = string_request + to_string(piece) + "dl";
+                            }
+                            else {
+                                string_request = string_request + to_string(piece) + "dd";
+                            }
+                        }
+                    }
+                }
+            }
+            dpp::message(event.msg.channel_id, string_request);
         }
-    });
+        });
 
-    /* Start the bot */
+    /* When a user clicks your button, the on_button_click event will fire,
+     * containing the custom_id you defined in your button.
+     */
+    bot.on_button_click([&bot](const dpp::button_click_t& event) {
+        /* Button clicks are still interactions, and must be replied to in some form to
+         * prevent the "this interaction has failed" message from Discord to the user.
+         */
+        event.reply("You clicked: " + event.custom_id);
+        });
+
     bot.start(dpp::st_wait);
 
     return 0;
