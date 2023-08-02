@@ -6,11 +6,6 @@
 #include <iterator>
 #include <fstream>
 
-std::vector<std::string> allQuotes = { "placeholder", "another placeholder" };
-std::string quote;
-const std::string dash = " - ";
-std::string quoteUserID;
-
 bool findWord(std::string sentence, std::string word)
 {
     std::istringstream iss(sentence);
@@ -26,17 +21,6 @@ bool findWord(std::string sentence, std::string word)
     return false;
 }
 
-std::string replace(std::string s, char find, char replace)
-{
-    for (int i = 0; i < s.length(); i++)
-    {
-        if (s[i] == find) {
-            s[i] = replace;
-        }
-    }
-    return s;
-}
-
 void importQuotes(std::vector<std::string>& allQuotes)
 {
     std::ifstream fin("AllQuotes.txt");
@@ -44,22 +28,29 @@ void importQuotes(std::vector<std::string>& allQuotes)
     allQuotes.clear();
 
     std::string element;
-    while (fin >> element)
+    while (getline(fin, element))
     {
         allQuotes.push_back(element);
     }
-    for (auto i = allQuotes.begin(); i != allQuotes.end(); i++)
-    {
-        *i = replace(*i, '_', ' ');
-    }
+}
+
+void exportQuotes(std::vector<std::string> allQuotes)
+{
+    //TODO ...
 }
 
 int main() {
     srand(time(nullptr));
+    
     dpp::cluster bot("bot token", dpp::i_default_intents | dpp::i_message_content);
 
     bot.on_log(dpp::utility::cout_logger());
 
+    std::vector<std::string> allQuotes = { "placeholder", "another placeholder" };
+    std::string quote;
+    const std::string dash = " - ";
+    std::string quoteUserID;
+    
     importQuotes(allQuotes);
 
     bot.on_message_create([&bot](const dpp::message_create_t& event) {
@@ -70,7 +61,7 @@ int main() {
         }
         else if (event.msg.content == "&rollDice")
         {
-            int num = rand() % 6 + 1;
+            int num = (rand() * 6) % 6 + 1;
             bot.message_create(
                 dpp::message(event.msg.channel_id, std::to_string(num)).set_reference(event.msg.id)
             );
@@ -85,7 +76,7 @@ int main() {
             }
             else
             {
-                bot.message_create(dpp::message(event.msg.channel_id, allQuotes.at((rand() * 100) % allQuotes.size())).set_reference(event.msg.id));
+                bot.message_create(dpp::message(event.msg.channel_id, allQuotes.at((rand() * 10000) % allQuotes.size())).set_reference(event.msg.id));
             }
         }
         else if (event.msg.content == "&help")
@@ -128,7 +119,7 @@ int main() {
                 quote.append(quoteUserID);
                 std::cout << quote << std::endl;
                 allQuotes.push_back(quote);
-                if (allQuotes.size() > 100)
+                if (allQuotes.size() > 1000)
                 {
                     allQuotes.erase(allQuotes.begin());
                 }
