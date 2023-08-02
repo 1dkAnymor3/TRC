@@ -1,5 +1,5 @@
 i have no idea what im doing
-Run using MyBot/dependencies/MyBot.vcxproj
+Run using MyBot/MyBot.vcxproj
 
 It's just one of my projects
 
